@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VibeChat Premium</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', 'Segoe UI', sans-serif; }
+        
+        body { 
+            background: linear-gradient(-45deg, #0f172a, #1e1b4b, #311042, #0f172a);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .bg-icons { position: absolute; width: 100%; height: 100%; top: 0; left: 0; pointer-events: none; z-index: 1; }
+        .floating-icon { position: absolute; color: rgba(255, 255, 255, 0.04); font-size: 50px; animation: floatAround 20s infinite linear; }
+        @keyframes floatAround {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.4; }
+            90% { opacity: 0.4; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
+
+        .welcome-screen {
+            width: 100%; max-width: 420px; padding: 40px 30px; 
+            background: rgba(255, 255, 255, 0.06); border-radius: 24px; text-align: center; 
+            border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.4); 
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            z-index: 10; transition: all 0.4s ease-in-out;
+        }
+
+        .welcome-screen h1 { color: #ffffff; font-size: 36px; margin-bottom: 15px; font-weight: 700; text-shadow: 0 0 10px rgba(56, 189, 248, 0.5); }
+        .welcome-screen p { color: #cbd5e1; font-size: 15px; margin-bottom: 25px; line-height: 1.5; }
+        
+        .step-section { display: none; animation: slideIn 0.4s ease forwards; }
+        .step-section.active { display: block; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-group label { color: #94a3b8; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px; margin-left: 5px; }
+        .input-group input { 
+            width: 100%; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); 
+            padding: 14px 16px; border-radius: 12px; color: #f8fafc; font-size: 14.5px; outline: none; transition: all 0.3s;
+        }
+        .input-group input:focus { border-color: #38bdf8; background: rgba(15, 23, 42, 0.8); }
+
+        .gender-options { display: flex; justify-content: space-around; gap: 20px; }
+        .gender-card {
+            flex: 1; padding: 25px 15px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .gender-card:hover { border-color: #38bdf8; transform: translateY(-3px); background: rgba(15, 23, 42, 0.8); }
+        .gender-card .icon { font-size: 40px; margin-bottom: 8px; display: block; }
+        .gender-card span { color: #f8fafc; font-size: 14px; font-weight: 600; display: block; }
+
+        .btn-submit {
+            width: 100%; background: linear-gradient(135deg, #38bdf8, #c084fc); border: none; color: white;
+            padding: 14px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(192, 132, 252, 0.3); transition: all 0.3s;
+        }
+        .btn-submit:hover { transform: scale(1.02); }
+
+        /* Chat Layout */
+        .chat-container {
+            width: 100%; max-width: 450px; height: 90vh; background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(10px); display: none; flex-direction: column; border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.1); z-index: 10;
+        }
+        
+        .chat-header { background: rgba(30, 41, 59, 0.8); padding: 18px; display: flex; align-items: center; gap: 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+        .avatar { width: 45px; height: 45px; background: linear-gradient(135deg, #38bdf8, #0369a1); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 22px; }
+        .header-info h2 { color: #f8fafc; font-size: 17px; font-weight: 600; }
+        .header-info p { color: #38bdf8; font-size: 13px; }
+        
+        .chat-window { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; background-color: rgba(15, 23, 42, 0.4); }
+        .message { max-width: 75%; padding: 12px 16px; border-radius: 16px; font-size: 15px; line-height: 1.45; color: #f8fafc; word-wrap: break-word; animation: fadeIn 0.3s forwards; opacity: 0; transform: translateY(10px); }
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+        
+        .user-msg { background: linear-gradient(135deg, #0369a1, #0284c7); align-self: flex-end; border-bottom-right-radius: 4px; }
+        .ai-msg { background: rgba(30, 41, 59, 0.9); align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.05); }
+        
+        .typing-indicator { display: none; background: rgba(30, 41, 59, 0.9); padding: 14px 18px; border-radius: 16px; align-self: flex-start; gap: 5px; align-items: center; }
+        .typing-indicator span { width: 8px; height: 8px; background-color: #94a3b8; border-radius: 50%; display: inline-block; animation: bounce 1.3s infinite ease-in-out; }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        
+        .chat-input-area { background: rgba(30, 41, 59, 0.8); padding: 16px; display: flex; align-items: center; gap: 12px; }
+        .chat-input-area input { flex: 1; background-color: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); padding: 14px 18px; border-radius: 12px; color: #f8fafc; outline: none; }
+        .chat-input-area button { background: linear-gradient(135deg, #38bdf8, #c084fc); border: none; color: white; width: 46px; height: 46px; border-radius: 12px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+    </style>
+</head>
+<body>
+
+    <div class="bg-icons" id="bgIcons"></div>
+
+    <!-- Professional Welcome Screen -->
+    <div class="welcome-screen" id="welcomeScreen">
+        <h1>VibeChat</h1>
+        
+        <!-- STEP 1: GENDER SELECTION -->
+        <div id="step1" class="step-section active">
+            <p>Please select your preferred companion type to begin.</p>
+            <div class="gender-options">
+                <div class="gender-card" onclick="goToStep2('female')">
+                    <span class="icon">🌸</span>
+                    <span>AI Companion (Female)</span>
+                </div>
+                <div class="gender-card" onclick="goToStep2('male')">
+                    <span class="icon">⚡</span>
+                    <span>AI Companion (Male)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 2: NAME CONFIGURATION -->
+        <div id="step2" class="step-section">
+            <p>Configure names for your session.</p>
+            <div class="input-group">
+                <label>Your Name</label>
+                <input type="text" id="userNameInput" placeholder="Enter your name...">
+            </div>
+            <div class="input-group">
+                <label id="botLabel">AI Companion Name</label>
+                <input type="text" id="botNameInput" placeholder="Enter a name for your AI...">
+            </div>
+            <button class="btn-submit" onclick="finishSetup()">Start Chatting</button>
+        </div>
+    </div>
+
+    <!-- Main Chat Container -->
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-header">
+            <div class="avatar" id="chatAvatar">🌸</div>
+            <div class="header-info">
+                <h2 id="chatTitle">AI Friend</h2>
+                <p id="status">Online</p>
+            </div>
+        </div>
+
+        <div class="chat-window" id="chatWindow">
+            <div class="message ai-msg" id="initialMessage">Welcome</div>
+            <div class="typing-indicator" id="typingIndicator">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+
+        <div class="chat-input-area">
+            <input type="text" id="userInput" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Floating Icons Generation
+        const bgIcons = document.getElementById('bgIcons');
+        const iconsList = ['💬', '✉️', '💭', '✨'];
+        for (let i = 0; i < 15; i++) {
+            const iconSpan = document.createElement('span');
+            iconSpan.className = 'floating-icon';
+            iconSpan.innerText = iconsList[Math.floor(Math.random() * iconsList.length)];
+            iconSpan.style.left = Math.random() * 100 + 'vw';
+            iconSpan.style.animationDelay = Math.random() * 15 + 's';
+            iconSpan.style.animationDuration = (Math.random() * 10 + 15) + 's';
+            bgIcons.appendChild(iconSpan);
+        }
+
+        let selectedGender = 'female';
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const chatContainer = document.getElementById('chatContainer');
+        const chatWindow = document.getElementById('chatWindow');
+        const userInput = document.getElementById('userInput');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const statusText = document.getElementById('status');
+        const chatAvatar = document.getElementById('chatAvatar');
+        const chatTitle = document.getElementById('chatTitle');
+        const initialMessage = document.getElementById('initialMessage');
+
+        function goToStep2(gender) {
+            selectedGender = gender;
+            document.getElementById('botLabel').innerText = gender === 'female' ? 'Female AI Name' : 'Male AI Name';
+            
+            document.getElementById('step1').classList.remove('active');
+            document.getElementById('step2').classList.add('active');
+        }
+
+        function finishSetup() {
+            const userName = document.getElementById('userNameInput').value.trim() || "User";
+            const botName = document.getElementById('botNameInput').value.trim() || (selectedGender === 'female' ? "Companion" : "Partner");
+
+            chatAvatar.innerText = selectedGender === 'female' ? '🌸' : '⚡';
+            chatTitle.innerText = botName;
+
+            fetch('/start_session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_name: userName, bot_name: botName, gender: selectedGender })
+            })
+            .then(res => res.json())
+            .then(data => {
+                initialMessage.innerText = data.welcome_msg;
+                welcomeScreen.style.opacity = '0';
+                setTimeout(() => {
+                    welcomeScreen.style.display = 'none';
+                    chatContainer.style.display = 'flex';
+                }, 400);
+            });
+        }
+
+        function handleKeyPress(e) { if (e.key === 'Enter') sendMessage(); }
+
+        function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            appendMessage(text, 'user-msg');
+            userInput.value = '';
+
+            statusText.innerText = 'typing...';
+            statusText.style.color = '#38bdf8';
+            typingIndicator.style.display = 'flex';
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+
+            fetch('/get_response', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text })
+            })
+            .then(res => res.json())
+            .then(data => {
+                setTimeout(() => {
+                    statusText.innerText = 'Online';
+                    statusText.style.color = '#38bdf8';
+                    typingIndicator.style.display = 'none';
+                    appendMessage(data.reply, 'ai-msg');
+                }, 1000);
+            })
+            .catch(() => {
+                statusText.innerText = 'Online';
+                typingIndicator.style.display = 'none';
+            });
+        }
+
+        function appendMessage(text, className) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${className}`;
+            msgDiv.innerText = text;
+            chatWindow.insertBefore(msgDiv, typingIndicator);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+    </script>
+</body>
+</html>
