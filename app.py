@@ -74,7 +74,7 @@ def get_response():
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model="deepseek-ai/DeepSeek-V3",
             messages=messages
         )
         ai_reply = response.choices[0].message.content
